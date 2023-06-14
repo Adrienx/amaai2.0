@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script
+      src="https://kit.fontawesome.com/e15a1d7df4.js"
+      crossorigin="anonymous"
+    ></script>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdnjs.deepai.org/deepai.min.js"></script>
+    <script defer src="script.js"></script>
+    <title>AmAai</title>
+  </head>
+  <body>
+    <header>
+      <h1>AmAai</h1>
+      <p>Hey, I'm Amaai! Ask Me Anything!</p>
+    </header>
+    <main>
+      <div id="inputSection">
+        <label>What would you like to know?</label>
+        <textarea id="inputPrompt"></textarea>
+        <div id="btnContainer">
+          <button title=" Ask" id="askBtn">
+            <i class="fa-solid fa-paper-plane fa-xl"></i>
+          </button>
+          <button title="Improve Prompt" id="improvePromptBtn">
+            <i class="fa-solid fa-wand-sparkles fa-xl"></i>
+          </button>
+          <button title="Clear Input" id="clearInputBtn">
+            <i class="fas fa-broom"></i>
+          </button>
+        </div>
+      </div>
+      <div id="responseSection">
+        <label> My thoughts:</label>
+        <textarea id="response" readonly></textarea>
+        <div id="btnContainer">
+          <button title="Copy Results" id="copyBtn">
+            <i class="fa fa-copy fa-xl"></i>
+          </button>
+          <button title="Improve Response" id="improveResponseBtn">
+            <i class="fa-solid fa-wand-sparkles fa-xl"></i>
+          </button>
+        </div>
+      </div>
+      <label> Our chat history: </label>
+      <div id="chatHistory" class="chatHistory"></div>
+      <div id="btnContainer">
+        <button title="Delete History" id="clearHistoryBtn">
+          <i class="far fa-trash-alt fa-xl"></i>
+        </button>
+      </div>
+    </div>
+    <div id="myModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <form id="promptForm">
+          <label for="titleInput">Title:</label><br>
+          <input type="text" id="titleInput" name="title" required><br>
+          <label for="descriptionInput">Description:</label><br>
+          <textarea id="descriptionInput" name="description" required></textarea><br>
+          <label for="categoryInput">Category:</label><br>
+          <input type="text" id="categoryInput" name="category" required><br>
+          <button type="submit" id="createPromptBtn">Save Prompt</button>
+        </form>
+      </div>
+    </div>
+    </main>
+    <div id="overlay">
+      <p>Hmm, let me think...</p>
+    </div>
+  </body>
+</html>
