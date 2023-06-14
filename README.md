@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # AmAai
 
 ## Project Description
