@@ -1,4 +1,4 @@
-const { Prompt, PromptCategory } = require("../models")
+const { User, Prompt, PromptCategory } = require("../models")
 
 
 exports.index = async (req, res) => {
@@ -42,15 +42,35 @@ exports.delete = async (req, res) => {
 
     // Remove all the associated prompts
     for (let promptId of category.prompts) {
-      await Prompt.findByIdAndDelete(promptId)
+      const prompt = await Prompt.findById(promptId)
+
+      if (!prompt) {
+        return res.status(404).json({ message: "Prompt not found" })
+      }
+
+      // Remove this prompt from the user's prompts array.
+      const user = await User.findById(prompt.user)
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" })
+      }
+
+      user.prompts.pull(prompt._id)
+      await user.save()
+
+      // Delete the prompt itself.
+      await Prompt.deleteOne({ _id: prompt._id })
     }
 
     // Delete the category itself
-    await category.remove()
+    await PromptCategory.deleteOne({ _id: req.params.id })
 
     res.json({ message: "Category and its associated prompts deleted" })
   } catch (error) {
+    console.error(error)
     res.status(500).json({ message: error.message })
   }
 }
+
+
 

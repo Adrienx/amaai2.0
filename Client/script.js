@@ -222,12 +222,39 @@ const promptsList = document.querySelector("#promptsList")
 const userPromptsSelect = document.querySelector("#userPrompts")
 const deletePromptBtn = document.querySelector("#deletePromptBtn")
 const categoriesUrl = "http://localhost:3001/api/promptCategories"
+const deleteCategorySelect = document.querySelector("#deleteCategory")
+const searchDeletePromptsBtn = document.querySelector("#searchDeletePromptsBtn")
+const deletePromptsList = document.querySelector("#deletePromptsList")
 
 ////////////////////////////////////////////
+
+let modal = document.getElementById("myModal")
+let span = document.getElementsByClassName("close")[0]
+let openModalBtn = document.getElementById("openModalBtn")
+
+// Whenever the modal is shown, repopulate the user prompts dropdown.
+modal.addEventListener("show", function () {
+  populateUserPrompts()
+})
+
+// When the user clicks on <span> (x), close the modal
+span.onclick = function () {
+  modal.style.display = "none"
+}
+
+openModalBtn.onclick = function () {
+  modal.style.display = "block"
+  populateUserPrompts()
+}
+localStorage.setItem("userID", "6488b59d651b22a3fbae0b0e");
 
 // Fetch userID from local storage
 let userID = localStorage.getItem("userID")
 console.log("User ID from local storage: ", userID)
+//Check whether userID is null or undefined at the beginning of the file
+if (!userID) {
+  console.log("User ID is not found in local storage.")
+}
 
 ////////////////////////////////////////////
 
@@ -243,44 +270,56 @@ function populateUserPrompts() {
     })
     .then((user) => {
       console.log("User data: ", user)
-      userPromptsSelect.innerHTML = "" // Clear the dropdown first
-      user.prompts.forEach((prompt) => {
-        const option = document.createElement("option")
-        option.value = prompt._id
-        option.text = prompt.title
-        userPromptsSelect.add(option)
-      })
+      // Clear the dropdown
+      if(userPromptsSelect) {
+        userPromptsSelect.innerHTML = ""
+        user.prompts.forEach((prompt) => {
+          const option = document.createElement("option")
+          option.value = prompt._id
+          option.text = prompt.title
+          userPromptsSelect.add(option)
+        })
+      } else {
+        console.log("userPromptsSelect is null");
+      }
     })
     .catch((error) => console.error("Error:", error))
 }
+
+
 ////////////////////////////////////////////
+
+// Function to populate user categories dropdown
 
 function populateCategories() {
   fetch(categoriesUrl)
     .then((response) => response.json())
     .then((categories) => {
-      categorySelect.innerHTML = ""; // Clear the dropdown first
-      searchCategorySelect.innerHTML = ""; // Clear the dropdown first
+      categorySelect.innerHTML = "" // Clear the dropdown first
+      searchCategorySelect.innerHTML = "" // Clear the dropdown first
 
       categories.forEach((category) => {
-        const option1 = document.createElement("option");
-        option1.value = category._id;
-        option1.text = category.name;
-        categorySelect.add(option1);
+        const option1 = document.createElement("option")
+        option1.value = category._id
+        option1.text = category.name
+        categorySelect.add(option1)
 
-        const option2 = document.createElement("option");
-        option2.value = category._id;
-        option2.text = category.name;
-        searchCategorySelect.add(option2);
-      });
+        const option2 = document.createElement("option")
+        option2.value = category._id
+        option2.text = category.name
+        searchCategorySelect.add(option2)
+
+        const option3 = document.createElement("option")
+        option3.value = category._id
+        option3.text = category.name
+        deleteCategorySelect.add(option3)
+      })
 
       // Call fetchCategories() to populate the delete category dropdown
-      fetchCategories();
+      fetchCategories()
     })
-    .catch((error) => console.error("Error:", error));
+    .catch((error) => console.error("Error:", error))
 }
-
-
 
 // Call these functions on page load to populate the dropdowns
 populateUserPrompts()
@@ -322,39 +361,47 @@ searchPromptsBtn.addEventListener("click", async (event) => {
 
 ////////////////////////////////////////////
 
-// When the delete prompt button is clicked...
-deletePromptBtn.addEventListener("click", async (event) => {
+// When the search delete prompts button is clicked...
+searchDeletePromptsBtn.addEventListener("click", async (event) => {
   event.preventDefault()
 
-  // Get the promptId from the dropdown.
-  const promptId = userPromptsSelect.value
+  // Fetch prompts of the selected category.
+  const categoryId = deleteCategorySelect.value
+  const response = await fetch(
+    `http://localhost:3001/api/prompts/category/${categoryId}`
+  )
+  const prompts = await response.json()
 
-  // Ensure that promptId is defined and not an empty string.
-  if (!promptId) {
-    console.error("No prompt selected for deletion.")
-    return
-  }
+  // Clear the delete prompts list.
+  deletePromptsList.innerHTML = ""
 
-  console.log("Prompt ID: ", promptId)
+  // Display prompts in a list.
+  prompts.forEach((prompt) => {
+    const li = document.createElement("li")
+    li.textContent = prompt.description
 
-  // Send a DELETE request to remove the selected prompt.
-  try {
-    const response = await fetch(
-      `http://localhost:3001/api/prompts/${promptId}`,
-      {
-        method: "DELETE",
+    // When a prompt is clicked, ask for confirmation and delete it if confirmed.
+    li.addEventListener("click", async () => {
+      const confirmDelete = window.confirm(
+        "Are you sure you want to delete this prompt?"
+      )
+      if (confirmDelete) {
+        try {
+          const response = await fetch(
+            `http://localhost:3001/api/prompts/${prompt._id}`,
+            { method: "DELETE" }
+          )
+          if (!response.ok)
+            throw new Error(`HTTP error! status: ${response.status}`)
+          li.remove()
+        } catch (error) {
+          console.error("Error:", error)
+        }
       }
-    )
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+    })
 
-    // Remove the deleted prompt from the user prompts select.
-    const option = userPromptsSelect.querySelector(
-      `option[value="${promptId}"]`
-    )
-    userPromptsSelect.removeChild(option)
-  } catch (error) {
-    console.error("Error:", error)
-  }
+    deletePromptsList.append(li)
+  })
 })
 ////////////////////////////////////////////
 
@@ -366,6 +413,12 @@ createPromptBtn.addEventListener("click", async (event) => {
   let promptDescription = descriptionInput.value
   let promptCategory = categorySelect.value
   let newCategory = newCategoryInput.value
+
+  // Validate inputs
+  if (!promptTitle || !promptDescription || (!promptCategory && !newCategory)) {
+    alert("Please fill all the required fields.")
+    return
+  }
 
   // If the new category option is checked and newCategory is not empty, create a new category
   if (document.querySelector("#newCategoryOption").checked && newCategory) {
@@ -420,55 +473,78 @@ createPromptBtn.addEventListener("click", async (event) => {
 
 //////////////////////////////////////////////////////////////////////////////////////
 
-
 // Fetch all categories to populate dropdown list
 async function fetchCategories() {
-  const response = await fetch('http://localhost:3001/api/promptCategories');
-  const categories = await response.json();
+  const response = await fetch("http://localhost:3001/api/promptCategories")
+  const categories = await response.json()
 
-  const deleteCategoryDropdown = document.getElementById('delete-category-dropdown');
+  const deleteCategoryDropdown = document.getElementById(
+    "delete-category-dropdown"
+  )
 
   // Clear previous options
-  deleteCategoryDropdown.innerHTML = '';
+  if (deleteCategoryDropdown) {
+    deleteCategoryDropdown.innerHTML = ""
+  }
 
   // Create an option for each category
   categories.forEach((category) => {
-    const option = document.createElement('option');
-    option.value = category._id;
-    option.textContent = category.name;
-    deleteCategoryDropdown.appendChild(option);
-  });
+    const option = document.createElement("option")
+    option.value = category._id
+    option.textContent = category.name
+    deleteCategoryDropdown.appendChild(option)
+  })
 }
 
 // Handle category deletion
-document.getElementById('delete-category-button').addEventListener('click', async function() {
-  const selectedCategoryId = document.getElementById('delete-category-dropdown').value;
-  
-  if (!selectedCategoryId) {
-    console.log('No category selected');
-    return;
-  }
+document
+  .getElementById("delete-category-button")
+  .addEventListener("click", async function () {
+    const deleteCategoryDropdown = document.getElementById(
+      "delete-category-dropdown"
+    )
 
-  const confirmDelete = window.confirm("Are you sure you want to delete this category and all its prompts?");
+    const selectedCategoryId = deleteCategoryDropdown.value
 
-  if (confirmDelete) {
-    try {
-      const response = await fetch(`http://localhost:3001/api/promptCategories/${selectedCategoryId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete category');
-      }
-
-      // Refresh categories
-      fetchCategories();
-
-      console.log('Category deleted successfully');
-    } catch (error) {
-      console.error('Error:', error);
+    if (!selectedCategoryId) {
+      console.log("No category selected")
+      return
     }
-  } else {
-    console.log('Category deletion cancelled');
-  }
-});
+
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this category and all its prompts?"
+    )
+
+    if (confirmDelete) {
+      try {
+        const response = await fetch(
+          `http://localhost:3001/api/promptCategories/${selectedCategoryId}`,
+          {
+            method: "DELETE",
+          }
+        )
+
+        if (!response.ok) {
+          // Handle non-ok response status
+          console.error(
+            `Failed to delete category. HTTP status: ${response.status}`
+          )
+          return
+        }
+
+        console.log("Category deleted successfully")
+      } catch (error) {
+        console.error("Error:", error)
+      }
+    } else {
+      console.log("Category deletion cancelled")
+    }
+
+    // Repopulate the categories dropdown and user prompts dropdown after a category is deleted, to reflect the changes in the frontend
+    try {
+      populateCategories()
+      populateUserPrompts()
+    } catch (error) {
+      console.error("Error:", error)
+    }
+  })

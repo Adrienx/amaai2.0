@@ -40,23 +40,30 @@ exports.update = (req, res) => {
 
 exports.delete = async (req, res) => {
   try {
-    const prompt = await Prompt.findById(req.params.id);
-    if (!prompt) {
-      return res.status(404).json({ message: "Prompt not found" });
-    }
-
-    // Remove the prompt id from the user's prompts array
-    await User.findByIdAndUpdate(prompt.user, { $pull: { prompts: prompt._id } });
+    const promptId = req.params.id;
+    // Find prompt document by ID and remove
+    await Prompt.findByIdAndRemove(promptId);
     
-    // Remove the prompt id from the category's prompts array
-    await PromptCategory.findByIdAndUpdate(prompt.category, { $pull: { prompts: prompt._id } });
+    // Update user and category documents to remove reference to deleted prompt
+    const user = await User.findOne({prompts: {$in: [promptId]}});
+    const category = await PromptCategory.findOne({prompts: {$in: [promptId]}});
 
-    await prompt.remove(); // Delete the prompt document itself
-    res.json({ message: "Prompt deleted" });
+    // Pull the prompt ID from the user and category prompts arrays
+    if(user) {
+      user.prompts.pull(promptId);
+      await user.save();
+    }
+    if(category) {
+      category.prompts.pull(promptId);
+      await category.save();
+    }
+    
+    res.json({ message: "Prompt successfully deleted." });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-};
+}
+
 
 
 

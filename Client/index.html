@@ -52,56 +52,62 @@
         <button title="Delete History" id="clearHistoryBtn">
           <i class="far fa-trash-alt fa-xl"></i>
         </button>
+
+        
       </div>
-    </div>
+      <!-- Open Modal -->
+      <div id="open-modal-section">
+        <button id="openModalBtn">Click here to create a new prompt</button>
+      </div>
+      
+      <!-- Create New Prompt Modal -->
+      <div id="myModal" class="modal">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <form id="new-prompt-form">
+            <label for="title">Title</label>
+            <input type="text" id="title" name="title" required><br>
+            <label for="description">Description</label>
+            <textarea id="description" name="description" required></textarea><br>
+            <label>Category</label><br>
+            <input type="radio" id="existingCategoryOption" name="categoryOption" value="existing" checked>
+            <label for="existing">Existing</label>
+            <select id="category" name="category" required></select><br>
+            <input type="radio" id="newCategoryOption" name="categoryOption" value="new">
+            <label for="new">New</label>
+            <input type="text" id="newCategory" name="newCategory"><br>
+            <button type="submit" id="create-prompt-btn">Create Prompt</button>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Search Prompts Section -->
+      <div id="search-prompts-section">
+        <h3>Search Prompts by Category</h3>
+        <label for="searchCategory">Choose Category:</label>
+        <select id="searchCategory"></select>
+        <button id="searchPromptsBtn">Search</button>
+        <ul id="promptsList"></ul>
+      </div>
+      
+      <!-- Delete Prompt By Search Section -->
+      <div id="delete-prompt-search-section">
+        <h3>Delete Prompt by Search</h3>
+        <label for="deleteCategory">Choose Category:</label>
+        <select id="deleteCategory"></select>
+        <button id="searchDeletePromptsBtn">Search</button>
+        <ul id="deletePromptsList"></ul>
+      </div>      
+ 
+      
+      <!-- Delete Category Section -->
+      <div id="delete-category-section">
+        <h3>Delete Category</h3>
+        <label for="delete-category-dropdown">Select Category:</label>
+        <select id="delete-category-dropdown"></select>
+        <button id="delete-category-button">Delete Selected Category</button>
+      </div>
 
-
-    <div id="myModal" class="modal">
-      <div class="modal-content">
-        <span class="close">&times;</span>
-
-        <form id="new-prompt-form">
-          <label for="title">Title</label>
-          <input type="text" id="title" name="title" required><br>
-        
-          <label for="description">Description</label>
-          <textarea id="description" name="description" required></textarea><br>
-        
-          <label>Category</label><br>
-          <input type="radio" id="existingCategoryOption" name="categoryOption" value="existing" checked>
-          <label for="existing">Existing</label>
-          <select id="category" name="category" required></select><br>
-        
-          <input type="radio" id="newCategoryOption" name="categoryOption" value="new">
-          <label for="new">New</label>
-          <input type="text" id="newCategory" name="newCategory"><br>
-        
-          <button type="submit" id="create-prompt-btn">Create Prompt</button>
-        </form>
-        
-</div>
-
-<!-- Search prompts -->
-<label for="searchCategory">Search Prompts by Category</label>
-<select id="searchCategory"></select>
-<button id="searchPromptsBtn">Search</button>
-<ul id="promptsList"></ul>
-
-<!-- Delete prompt -->
-<label for="userPrompts">Your Prompts</label>
-<select id="userPrompts"></select>
-<button id="deletePromptBtn">Delete Prompt</button>
-
-</div>
-
-
-<div id="delete-category-section">
-  <h3>Delete Category</h3>
-  <select id="delete-category-dropdown">
-    <!-- Categories will be filled here by JS -->
-  </select>
-  <button id="delete-category-button">Delete Selected Category</button>
-</div>
 
     </main>
     <div id="overlay">
