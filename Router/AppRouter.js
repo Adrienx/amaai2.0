@@ -7,7 +7,7 @@ const promptRouter = require("./promptRoutes")
 const promptCategoriesRoutes = require("./promptCategoriesRoutes")
 
 router.use("/users", userRouter)
-router.use("/promptRouter", promptRouter)
-router.use("/promptCategory", promptCategoriesRoutes)
+router.use("/prompts", promptRouter)
+router.use("/promptCategories", promptCategoriesRoutes)
 
 module.exports = router

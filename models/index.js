@@ -1,3 +1,4 @@
+
 const User = require('./User');
 const Prompt = require('./Prompt');
 const PromptCategory = require('./PromptCategory');

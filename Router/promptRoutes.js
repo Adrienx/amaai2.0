@@ -7,5 +7,6 @@ router.post("/", promptsController.create)
 router.get("/:id", promptsController.show)
 router.put("/:id", promptsController.update)
 router.delete("/:id", promptsController.delete)
+router.get("/category/:categoryId", promptsController.findByCategory)
 
 module.exports = router

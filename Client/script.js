@@ -206,24 +206,196 @@ document.addEventListener("DOMContentLoaded", () => {
 
   //leaving this event listener un-nested for now in case I might want to call the askAmaai function in future features
   askBtn.addEventListener("click", askAmaai)
-
-  //////////////////////////////////////////////////////////////////////////////////////
 })
-document.addEventListener("DOMContentLoaded", () => {
-  const createPromptBtn = document.getElementById("createPromptBtn")
-  const titleInput = document.getElementById("titleInput")
-  const descriptionInput = document.getElementById("descriptionInput")
-  
 
-  createPromptBtn.addEventListener("click", (event) => {
-    event.preventDefault() // prevent form from submitting normally
-    let promptTitle = titleInput.value
-    let promptDescription = descriptionInput.value
-    let promptCategory = "6488b59d651b22a3fbae0b11"
-    let userID = "6488b59d651b22a3fbae0b0e" 
+//////////////////////////////////////////////////////////////////////////////////////
 
-    // Create a new prompt
-    fetch("http://localhost:3001/api/promptRouter", {
+// Get user input elements and button elements
+const titleInput = document.querySelector("#title")
+const descriptionInput = document.querySelector("#description")
+const categorySelect = document.querySelector("#category")
+const newCategoryInput = document.querySelector("#newCategory")
+const createPromptBtn = document.querySelector("#create-prompt-btn")
+const searchCategorySelect = document.querySelector("#searchCategory")
+const searchPromptsBtn = document.querySelector("#searchPromptsBtn")
+const promptsList = document.querySelector("#promptsList")
+const userPromptsSelect = document.querySelector("#userPrompts")
+const deletePromptBtn = document.querySelector("#deletePromptBtn")
+const categoriesUrl = "http://localhost:3001/api/promptCategories"
+
+////////////////////////////////////////////
+
+// Fetch userID from local storage
+let userID = localStorage.getItem("userID")
+console.log("User ID from local storage: ", userID)
+
+////////////////////////////////////////////
+
+// Function to populate user prompts dropdown
+
+function populateUserPrompts() {
+  console.log("populateUserPrompts function is being called")
+
+  fetch(`http://localhost:3001/api/users/${userID}`)
+    .then((response) => {
+      console.log("Response from server: ", response)
+      return response.json()
+    })
+    .then((user) => {
+      console.log("User data: ", user)
+      userPromptsSelect.innerHTML = "" // Clear the dropdown first
+      user.prompts.forEach((prompt) => {
+        const option = document.createElement("option")
+        option.value = prompt._id
+        option.text = prompt.title
+        userPromptsSelect.add(option)
+      })
+    })
+    .catch((error) => console.error("Error:", error))
+}
+////////////////////////////////////////////
+
+function populateCategories() {
+  fetch(categoriesUrl)
+    .then((response) => response.json())
+    .then((categories) => {
+      categorySelect.innerHTML = ""; // Clear the dropdown first
+      searchCategorySelect.innerHTML = ""; // Clear the dropdown first
+
+      categories.forEach((category) => {
+        const option1 = document.createElement("option");
+        option1.value = category._id;
+        option1.text = category.name;
+        categorySelect.add(option1);
+
+        const option2 = document.createElement("option");
+        option2.value = category._id;
+        option2.text = category.name;
+        searchCategorySelect.add(option2);
+      });
+
+      // Call fetchCategories() to populate the delete category dropdown
+      fetchCategories();
+    })
+    .catch((error) => console.error("Error:", error));
+}
+
+
+
+// Call these functions on page load to populate the dropdowns
+populateUserPrompts()
+populateCategories()
+
+////////////////////////////////////////////
+
+// When the search prompts button is clicked...
+searchPromptsBtn.addEventListener("click", async (event) => {
+  event.preventDefault()
+
+  // Fetch prompts of the selected category.
+  const categoryId = searchCategorySelect.value
+  const response = await fetch(
+    `http://localhost:3001/api/prompts/category/${categoryId}`
+  )
+  const prompts = await response.json()
+  // const categoryData = await response.json()
+
+  // Clear the prompts list.
+  promptsList.innerHTML = ""
+
+  // Display prompts in a list.
+  prompts.forEach((prompt) => {
+    const li = document.createElement("li")
+    li.textContent = prompt.description
+
+    // When a prompt is clicked, copy its description to the clipboard.
+    li.addEventListener("click", () => {
+      navigator.clipboard
+        .writeText(prompt.description)
+        .then(() => alert("Prompt copied to clipboard!"))
+        .catch((error) => console.error("Error:", error))
+    })
+
+    promptsList.append(li)
+  })
+})
+
+////////////////////////////////////////////
+
+// When the delete prompt button is clicked...
+deletePromptBtn.addEventListener("click", async (event) => {
+  event.preventDefault()
+
+  // Get the promptId from the dropdown.
+  const promptId = userPromptsSelect.value
+
+  // Ensure that promptId is defined and not an empty string.
+  if (!promptId) {
+    console.error("No prompt selected for deletion.")
+    return
+  }
+
+  console.log("Prompt ID: ", promptId)
+
+  // Send a DELETE request to remove the selected prompt.
+  try {
+    const response = await fetch(
+      `http://localhost:3001/api/prompts/${promptId}`,
+      {
+        method: "DELETE",
+      }
+    )
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+
+    // Remove the deleted prompt from the user prompts select.
+    const option = userPromptsSelect.querySelector(
+      `option[value="${promptId}"]`
+    )
+    userPromptsSelect.removeChild(option)
+  } catch (error) {
+    console.error("Error:", error)
+  }
+})
+////////////////////////////////////////////
+
+// When the create prompt button is clicked...
+createPromptBtn.addEventListener("click", async (event) => {
+  event.preventDefault()
+
+  let promptTitle = titleInput.value
+  let promptDescription = descriptionInput.value
+  let promptCategory = categorySelect.value
+  let newCategory = newCategoryInput.value
+
+  // If the new category option is checked and newCategory is not empty, create a new category
+  if (document.querySelector("#newCategoryOption").checked && newCategory) {
+    try {
+      const response = await fetch(
+        "http://localhost:3001/api/promptCategories",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ name: newCategory }),
+        }
+      )
+
+      const data = await response.json()
+      promptCategory = data._id // Set promptCategory to the id of the new category
+
+      // Repopulate categories dropdowns after a new category is created
+      populateCategories()
+    } catch (error) {
+      console.error("Error:", error)
+    }
+  }
+
+  ////////////////////////////////////////////
+
+  // Create a new prompt
+  try {
+    const response = await fetch("http://localhost:3001/api/prompts", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -235,27 +407,68 @@ document.addEventListener("DOMContentLoaded", () => {
         user: userID,
       }),
     })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Prompt created:", data)
 
-        // Update the user's prompts array
-        return fetch(`http://localhost:3001/api/users/${userID}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            prompts: [...data.prompts, data._id],
-          }),
-        })
-      })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("User updated with the prompt:", data)
-      })
-      .catch((error) => {
-        console.error("Error:", error)
-      })
-  })
+    const data = await response.json()
+    console.log("Prompt created:", data)
+
+    // Repopulate user prompts dropdown after a new prompt is created
+    populateUserPrompts()
+  } catch (error) {
+    console.error("Error:", error)
+  }
 })
+
+//////////////////////////////////////////////////////////////////////////////////////
+
+
+// Fetch all categories to populate dropdown list
+async function fetchCategories() {
+  const response = await fetch('http://localhost:3001/api/promptCategories');
+  const categories = await response.json();
+
+  const deleteCategoryDropdown = document.getElementById('delete-category-dropdown');
+
+  // Clear previous options
+  deleteCategoryDropdown.innerHTML = '';
+
+  // Create an option for each category
+  categories.forEach((category) => {
+    const option = document.createElement('option');
+    option.value = category._id;
+    option.textContent = category.name;
+    deleteCategoryDropdown.appendChild(option);
+  });
+}
+
+// Handle category deletion
+document.getElementById('delete-category-button').addEventListener('click', async function() {
+  const selectedCategoryId = document.getElementById('delete-category-dropdown').value;
+  
+  if (!selectedCategoryId) {
+    console.log('No category selected');
+    return;
+  }
+
+  const confirmDelete = window.confirm("Are you sure you want to delete this category and all its prompts?");
+
+  if (confirmDelete) {
+    try {
+      const response = await fetch(`http://localhost:3001/api/promptCategories/${selectedCategoryId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete category');
+      }
+
+      // Refresh categories
+      fetchCategories();
+
+      console.log('Category deleted successfully');
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  } else {
+    console.log('Category deletion cancelled');
+  }
+});
