@@ -91,6 +91,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   //////////////////////////////////////////////////////////////////////////////////////
 
+  // commented out for now until I figure out a way to allow hitting the Enter key to submit a prompt while still enabling the Enter key to create a new line in the text area.
+
   // Function for "Enter" keydown event in the input text area.
 
   // pressEnterKey.addEventListener("keydown", function (e) {
@@ -207,8 +209,13 @@ document.addEventListener("DOMContentLoaded", () => {
   //leaving this event listener un-nested for now in case I might want to call the askAmaai function in future features
   askBtn.addEventListener("click", askAmaai)
 })
+/////////////////////////////////////////////////////////////////////////////////////////////
 
-//////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+// PROMPT MANAGEMENT VIA CRUD APIs
+
+/////////////////////////////////////////////////////////////////////////////////////////////
 
 // Get user input elements and button elements
 const titleInput = document.querySelector("#title")
@@ -226,7 +233,7 @@ const deleteCategorySelect = document.querySelector("#deleteCategory")
 const searchDeletePromptsBtn = document.querySelector("#searchDeletePromptsBtn")
 const deletePromptsList = document.querySelector("#deletePromptsList")
 
-////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
 
 let modal = document.getElementById("myModal")
 let openModalBtn = document.getElementById("openModalBtn")
@@ -247,6 +254,7 @@ openModalBtn.onclick = function () {
   modal.style.display = "block"
   populateUserPrompts()
 }
+/////////////////////////////////////////////////////////////////////////////////////////////
 
 // Fetch userID from local storage
 
@@ -258,9 +266,9 @@ if (!userID) {
   console.log("User ID is not found in local storage.")
 }
 
-////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
 
-// Function to populate user prompts dropdown
+// Function to populate user Prompts dropdown list
 
 function populateUserPrompts() {
   console.log("populateUserPrompts function is being called")
@@ -294,9 +302,9 @@ function populateUserPrompts() {
     })
 }
 
-////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
 
-// Function to populate user categories dropdown
+// Function to populate all 4 user Categories dropdown lists
 
 function populateCategories() {
   fetch(categoriesUrl)
@@ -338,7 +346,9 @@ function populateCategories() {
 populateUserPrompts()
 populateCategories()
 
-////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+//Section for Search All Prompts feature
 
 // When the search prompts button is clicked...
 searchPromptsBtn.addEventListener("click", async (event) => {
@@ -372,7 +382,9 @@ searchPromptsBtn.addEventListener("click", async (event) => {
   })
 })
 
-////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+//Section for Delete a Prompt feature
 
 // When the search delete prompts button is clicked...
 searchDeletePromptsBtn.addEventListener("click", async (event) => {
@@ -393,7 +405,7 @@ searchDeletePromptsBtn.addEventListener("click", async (event) => {
     const li = document.createElement("li")
     li.textContent = prompt.description
 
-    // When a prompt is clicked, ask for confirmation and delete it if confirmed.
+    // When a prompt li is clicked, ask for confirmation and delete it if confirmed.
     li.addEventListener("click", async () => {
       const confirmDelete = window.confirm(
         "Are you sure you want to delete this prompt?"
@@ -416,9 +428,11 @@ searchDeletePromptsBtn.addEventListener("click", async (event) => {
     deletePromptsList.append(li)
   })
 })
-////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
 
-// When the create prompt button is clicked...
+// Section for Create New Prompt feature
+
+//When Create Prompt is clicked...
 createPromptBtn.addEventListener("click", async (event) => {
   event.preventDefault()
 
@@ -447,8 +461,9 @@ createPromptBtn.addEventListener("click", async (event) => {
         }
       )
 
+      // Set promptCategory to the id of the new category
       const data = await response.json()
-      promptCategory = data._id // Set promptCategory to the id of the new category
+      promptCategory = data._id
 
       // Repopulate categories dropdowns after a new category is created
       populateCategories()
@@ -457,9 +472,9 @@ createPromptBtn.addEventListener("click", async (event) => {
     }
   }
 
-  ////////////////////////////////////////////
+  ///////////////////////////////////////////
 
-  // Create a new prompt
+  // Actually Create the new prompt
   try {
     const response = await fetch("http://localhost:3001/api/prompts", {
       method: "POST",
@@ -484,9 +499,12 @@ createPromptBtn.addEventListener("click", async (event) => {
   }
 })
 
-//////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+//Section for Delete Entire Category and its associated prompts feature
 
 // Fetch all categories to populate dropdown list
+
 async function fetchCategories() {
   const response = await fetch("http://localhost:3001/api/promptCategories")
   const categories = await response.json()
@@ -508,6 +526,8 @@ async function fetchCategories() {
     deleteCategoryDropdown.appendChild(option)
   })
 }
+
+///////////////////////////////////////////
 
 // Handle category deletion
 document
@@ -553,6 +573,8 @@ document
       console.log("Category deletion cancelled")
     }
 
+    ///////////////////////////////////////////
+
     // Repopulate the categories dropdown and user prompts dropdown after a category is deleted, to reflect the changes in the frontend
     try {
       populateCategories()
@@ -562,8 +584,6 @@ document
     }
   })
 /////////////////////////////////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////////////////////////////
 
 // Get elements
 let editPromptModal = document.getElementById("editPromptModal")
@@ -576,6 +596,10 @@ let newDescriptionInput = document.getElementById("newDescription")
 let updateCategorySelect = document.getElementById("updateCategorySelect")
 let updatePromptsList = document.getElementById("updatePromptsList")
 let editPromptForm = document.getElementById("editPromptForm")
+
+///////////////////////////////////////////
+
+//Handle the opening and closing of the Update Prompt Modal
 
 // Open the modal and populate the categories
 openEditPromptModalBtn.onclick = function () {
@@ -594,7 +618,9 @@ cancelChangesBtn.onclick = function () {
   alert("No changes were saved.")
 }
 
-// Function to populate categories in modal
+///////////////////////////////////////////
+
+// Function to populate categories in update modal
 function populateModalCategories() {
   fetch("http://localhost:3001/api/promptCategories")
     .then((response) => response.json())
@@ -606,33 +632,6 @@ function populateModalCategories() {
         option.text = category.name
         updateCategorySelect.add(option)
       })
-    })
-    .catch((error) => console.error("Error:", error))
-}
-
-// Update a prompt
-editPromptForm.onsubmit = function (event) {
-  event.preventDefault()
-
-  fetch(
-    `http://localhost:3001/api/prompts/${editPromptForm.dataset.promptId}`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title: newTitleInput.value,
-        description: newDescriptionInput.value,
-        category: updateCategorySelect.value,
-      }),
-    }
-  )
-    .then((response) => response.json())
-    .then(() => {
-      alert("Changes saved successfully.")
-      // Close the modal after changes saved
-      editPromptModal.style.display = "none"
     })
     .catch((error) => console.error("Error:", error))
 }
@@ -666,4 +665,33 @@ updateCategorySelect.onchange = function () {
     .catch((error) => console.error("Error:", error))
 }
 
-//////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////
+
+// Actually Update prompt
+editPromptForm.onsubmit = function (event) {
+  event.preventDefault()
+
+  fetch(
+    `http://localhost:3001/api/prompts/${editPromptForm.dataset.promptId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        title: newTitleInput.value,
+        description: newDescriptionInput.value,
+        category: updateCategorySelect.value,
+      }),
+    }
+  )
+    .then((response) => response.json())
+    .then(() => {
+      alert("Changes saved successfully.")
+      // Close the modal after changes saved
+      editPromptModal.style.display = "none"
+    })
+    .catch((error) => console.error("Error:", error))
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
