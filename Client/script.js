@@ -229,8 +229,9 @@ const deletePromptsList = document.querySelector("#deletePromptsList")
 ////////////////////////////////////////////
 
 let modal = document.getElementById("myModal")
-let span = document.getElementsByClassName("close")[0]
 let openModalBtn = document.getElementById("openModalBtn")
+// let span = document.getElementsByClassName("close")[0]
+let modalCloseBtn = modal.getElementsByClassName("close")[0]
 
 // Whenever the modal is shown, repopulate the user prompts dropdown.
 modal.addEventListener("show", function () {
@@ -238,17 +239,18 @@ modal.addEventListener("show", function () {
 })
 
 // When the user clicks on <span> (x), close the modal
-span.onclick = function () {
+modalCloseBtn.onclick = function () {
   modal.style.display = "none"
 }
-
+// Open modal
 openModalBtn.onclick = function () {
   modal.style.display = "block"
   populateUserPrompts()
 }
-localStorage.setItem("userID", "6488b59d651b22a3fbae0b0e");
 
 // Fetch userID from local storage
+
+localStorage.setItem("userID", "6488b59d651b22a3fbae0b0e")
 let userID = localStorage.getItem("userID")
 console.log("User ID from local storage: ", userID)
 //Check whether userID is null or undefined at the beginning of the file
@@ -265,13 +267,17 @@ function populateUserPrompts() {
 
   fetch(`http://localhost:3001/api/users/${userID}`)
     .then((response) => {
+      // Check if the response is ok (status in the range 200-299)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
       console.log("Response from server: ", response)
       return response.json()
     })
     .then((user) => {
       console.log("User data: ", user)
       // Clear the dropdown
-      if(userPromptsSelect) {
+      if (userPromptsSelect) {
         userPromptsSelect.innerHTML = ""
         user.prompts.forEach((prompt) => {
           const option = document.createElement("option")
@@ -280,12 +286,13 @@ function populateUserPrompts() {
           userPromptsSelect.add(option)
         })
       } else {
-        console.log("userPromptsSelect is null");
+        console.log("userPromptsSelect is null")
       }
     })
-    .catch((error) => console.error("Error:", error))
+    .catch((error) => {
+      console.error("Failed to fetch user prompts:", error)
+    })
 }
-
 
 ////////////////////////////////////////////
 
@@ -297,6 +304,7 @@ function populateCategories() {
     .then((categories) => {
       categorySelect.innerHTML = "" // Clear the dropdown first
       searchCategorySelect.innerHTML = "" // Clear the dropdown first
+      updateCategorySelect.innerHTML = "" // Clear the dropdown first
 
       categories.forEach((category) => {
         const option1 = document.createElement("option")
@@ -313,6 +321,11 @@ function populateCategories() {
         option3.value = category._id
         option3.text = category.name
         deleteCategorySelect.add(option3)
+
+        const option4 = document.createElement("option")
+        option4.value = category._id
+        option4.text = category.name
+        updateCategorySelect.add(option4) // Add category to the update dropdown
       })
 
       // Call fetchCategories() to populate the delete category dropdown
@@ -548,3 +561,109 @@ document
       console.error("Error:", error)
     }
   })
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+// Get elements
+let editPromptModal = document.getElementById("editPromptModal")
+let openEditPromptModalBtn = document.getElementById("openEditPromptModalBtn")
+let editModalCloseBtn = editPromptModal.getElementsByClassName("close")[0]
+let cancelChangesBtn = document.getElementById("cancelChangesBtn")
+let saveChangesBtn = document.getElementById("saveChangesBtn")
+let newTitleInput = document.getElementById("newTitle")
+let newDescriptionInput = document.getElementById("newDescription")
+let updateCategorySelect = document.getElementById("updateCategorySelect")
+let updatePromptsList = document.getElementById("updatePromptsList")
+let editPromptForm = document.getElementById("editPromptForm")
+
+// Open the modal and populate the categories
+openEditPromptModalBtn.onclick = function () {
+  editPromptModal.style.display = "block"
+  populateModalCategories()
+}
+
+// Close the modal
+editModalCloseBtn.onclick = function () {
+  editPromptModal.style.display = "none"
+}
+
+// Cancel changes and close the modal
+cancelChangesBtn.onclick = function () {
+  editPromptModal.style.display = "none"
+  alert("No changes were saved.")
+}
+
+// Function to populate categories in modal
+function populateModalCategories() {
+  fetch("http://localhost:3001/api/promptCategories")
+    .then((response) => response.json())
+    .then((categories) => {
+      updateCategorySelect.innerHTML = "" // Clear the dropdown first
+      categories.forEach((category) => {
+        const option = document.createElement("option")
+        option.value = category._id
+        option.text = category.name
+        updateCategorySelect.add(option)
+      })
+    })
+    .catch((error) => console.error("Error:", error))
+}
+
+// Update a prompt
+editPromptForm.onsubmit = function (event) {
+  event.preventDefault()
+
+  fetch(
+    `http://localhost:3001/api/prompts/${editPromptForm.dataset.promptId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        title: newTitleInput.value,
+        description: newDescriptionInput.value,
+        category: updateCategorySelect.value,
+      }),
+    }
+  )
+    .then((response) => response.json())
+    .then(() => {
+      alert("Changes saved successfully.")
+      // Close the modal after changes saved
+      editPromptModal.style.display = "none"
+    })
+    .catch((error) => console.error("Error:", error))
+}
+
+// Fetch prompts based on selected category
+updateCategorySelect.onchange = function () {
+  fetch(
+    `http://localhost:3001/api/prompts/category/${updateCategorySelect.value}`
+  )
+    .then((response) => response.json())
+    .then((prompts) => {
+      // Clear the prompts list first
+      updatePromptsList.innerHTML = ""
+
+      prompts.forEach((prompt) => {
+        const li = document.createElement("li")
+        li.textContent = prompt.description
+
+        li.addEventListener("click", () => {
+          // Populate the inputs with the prompt's current values
+          newTitleInput.value = prompt.title
+          newDescriptionInput.value = prompt.description
+
+          // Store the prompt's id in the form so we can use it when we make the PUT request
+          editPromptForm.dataset.promptId = prompt._id
+        })
+
+        updatePromptsList.append(li)
+      })
+    })
+    .catch((error) => console.error("Error:", error))
+}
+
+//////////////////////////////////////////////////////////////////////////////////

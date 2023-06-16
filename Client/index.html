@@ -19,6 +19,7 @@
       <p>Hey, I'm Amaai! Ask Me Anything!</p>
     </header>
     <main>
+      <!-- Input Section -->
       <div id="inputSection">
         <label>What would you like to know?</label>
         <textarea id="inputPrompt"></textarea>
@@ -34,6 +35,7 @@
           </button>
         </div>
       </div>
+      <!-- Response Section -->
       <div id="responseSection">
         <label> My thoughts:</label>
         <textarea id="response" readonly></textarea>
@@ -46,70 +48,120 @@
           </button>
         </div>
       </div>
+      <!-- Chat History -->
       <label> Our chat history: </label>
       <div id="chatHistory" class="chatHistory"></div>
       <div id="btnContainer">
         <button title="Delete History" id="clearHistoryBtn">
           <i class="far fa-trash-alt fa-xl"></i>
         </button>
+      </div>
 
-        
-      </div>
-      <!-- Open Modal -->
-      <div id="open-modal-section">
-        <button id="openModalBtn">Click here to create a new prompt</button>
-      </div>
-      
       <!-- Create New Prompt Modal -->
+      <div id="open-modal-section">
+        <button id="openModalBtn">Open Create New Prompt Modal</button>
+      </div>
       <div id="myModal" class="modal">
         <div class="modal-content">
-          <span class="close">&times;</span>
+          <span title="Close Modal" class="close">&times;</span>
           <form id="new-prompt-form">
-            <label for="title">Title</label>
-            <input type="text" id="title" name="title" required><br>
-            <label for="description">Description</label>
-            <textarea id="description" name="description" required></textarea><br>
-            <label>Category</label><br>
-            <input type="radio" id="existingCategoryOption" name="categoryOption" value="existing" checked>
-            <label for="existing">Existing</label>
-            <select id="category" name="category" required></select><br>
-            <input type="radio" id="newCategoryOption" name="categoryOption" value="new">
-            <label for="new">New</label>
-            <input type="text" id="newCategory" name="newCategory"><br>
+            <label for="title">Title:</label>
+            <input type="text" id="title" name="title" required /><br /><br />
+            <label for="description">Description:</label>
+            <textarea id="description" name="description" required></textarea
+            ><br />
+            <label>Select Prompt Category Type:</label><br /><br />
+            <input
+              type="radio"
+              id="existingCategoryOption"
+              name="categoryOption"
+              value="existing"
+              checked
+            />
+            <label for="existing">Existing Prompt</label>
+            <select id="category" name="category" required></select
+            ><br /><br />
+            <input
+              type="radio"
+              id="newCategoryOption"
+              name="categoryOption"
+              value="new"
+            />
+            <label for="new">New Prompt</label>
+            <input type="text" id="newCategory" name="newCategory" /><br />
             <button type="submit" id="create-prompt-btn">Create Prompt</button>
           </form>
         </div>
       </div>
-      
+
+      <!-- Update Prompt Modal -->
+      <div id="open-modal-section">
+        <button id="openEditPromptModalBtn">
+          Open Update Existing Prompt Modal
+        </button>
+      </div>
+
+      <div id="editPromptModal" class="modal">
+        <div class="modal-content">
+          <span title="Close Modal" class="close">&times;</span>
+          <form id="editPromptForm">
+            <label for="newTitle">Title:</label>
+            <input type="text" id="newTitle" name="newTitle" /><br /><br />
+            <label for="newDescription">Description:</label>
+            <textarea id="newDescription" name="newDescription"></textarea
+            ><br />
+            <label for="updateCategorySelect">Category:</label>
+            <select id="updateCategorySelect" name="updateCategory"></select
+            ><br /><br />
+            <label for="updatePromptsList">Prompts:</label>
+            <ul id="updatePromptsList"></ul>
+            <h5>(Click on prompt to edit)</h5>
+            <button title="Save Changes" id="saveChangesBtn">
+              <i class="fa-solid fa-floppy-disk fa-xl"></i>
+            </button>
+            <button title="Cancel Changes" id="cancelChangesBtn">
+              <i class="fa-solid fa-xmark fa-xl"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+
       <!-- Search Prompts Section -->
       <div id="search-prompts-section">
-        <h3>Search Prompts by Category</h3>
+        <h3>Search All Prompts</h3>
+        <h5>(Click on prompt to copy to clipboard)</h5>
         <label for="searchCategory">Choose Category:</label>
         <select id="searchCategory"></select>
-        <button id="searchPromptsBtn">Search</button>
+        <button title="Search for Prompt to Copy" id="searchPromptsBtn">
+          <i class="fa-solid fa-magnifying-glass fa-xl"></i>
+        </button>
+
         <ul id="promptsList"></ul>
       </div>
-      
+
       <!-- Delete Prompt By Search Section -->
       <div id="delete-prompt-search-section">
-        <h3>Delete Prompt by Search</h3>
+        <h3>Delete Prompt</h3>
+        <h5>(Click on prompt to delete)</h5>
         <label for="deleteCategory">Choose Category:</label>
         <select id="deleteCategory"></select>
-        <button id="searchDeletePromptsBtn">Search</button>
+        <button title="Search for Prompt to Delete" id="searchDeletePromptsBtn">
+          <i class="fa-solid fa-magnifying-glass fa-xl"></i>
+        </button>
         <ul id="deletePromptsList"></ul>
-      </div>      
- 
-      
+      </div>
+
       <!-- Delete Category Section -->
       <div id="delete-category-section">
         <h3>Delete Category</h3>
         <label for="delete-category-dropdown">Select Category:</label>
         <select id="delete-category-dropdown"></select>
-        <button id="delete-category-button">Delete Selected Category</button>
+        <button title="Delete History" id="delete-category-button">
+          <i class="far fa-trash-alt fa-xl"></i>
+        </button>
       </div>
-
-
     </main>
+    <!-- Loading Screen Overlay-->
     <div id="overlay">
       <p>Hmm, let me think...</p>
     </div>
