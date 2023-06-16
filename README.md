@@ -42,6 +42,9 @@ AmAai 2.0 is built using a variety of technologies, including:
 
 - [Express](https://expressjs.com/) - Node.js web application framework.
 - [Mongoose](https://mongoosejs.com/) - Mongodb object modeling for Node.js, used to interact with our MongoDB database.
+- [Axios](https://axios-http.com/) - A promise-based HTTP Client for node.js and the browser
+- [Mozilla Developer Network](https://developer.mozilla.org/en-US/) - Resources for devs by devs.
+- [CHatGPT](https://chat.openai.com/) - AI chatbot that uses natural language processing to create humanlike conversational dialogue.
 - [DeepAI Text Generation API](https://deepai.org/) - This API is used to generate text based on the user's input.
 - [Text Analytics API](https://azure.microsoft.com/en-us/services/cognitive-services/text-analytics/) - Used to perform text sentiment analysis (planned for future iterations).
 

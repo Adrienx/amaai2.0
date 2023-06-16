@@ -8,10 +8,6 @@ exports.create = (req, res) => {
   User.create(req.body).then((user) => res.json(user))
 }
 
-// exports.show = (req, res) => {
-//   User.findById(req.params.id).then((user) => res.json(user))
-// }
-
 exports.show = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).populate("prompts")

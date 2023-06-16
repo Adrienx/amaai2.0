@@ -269,20 +269,14 @@ if (!userID) {
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 // Function to populate user Prompts dropdown list
-
 function populateUserPrompts() {
   console.log("populateUserPrompts function is being called")
 
-  fetch(`http://localhost:3001/api/users/${userID}`)
+  axios
+    .get(`http://localhost:3001/api/users/${userID}`)
     .then((response) => {
-      // Check if the response is ok (status in the range 200-299)
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
       console.log("Response from server: ", response)
-      return response.json()
-    })
-    .then((user) => {
+      const user = response.data
       console.log("User data: ", user)
       // Clear the dropdown
       if (userPromptsSelect) {
@@ -305,11 +299,12 @@ function populateUserPrompts() {
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 // Function to populate all 4 user Categories dropdown lists
-
 function populateCategories() {
-  fetch(categoriesUrl)
-    .then((response) => response.json())
-    .then((categories) => {
+  axios
+    .get(categoriesUrl)
+    .then((response) => {
+      const categories = response.data
+
       categorySelect.innerHTML = "" // Clear the dropdown first
       searchCategorySelect.innerHTML = "" // Clear the dropdown first
       updateCategorySelect.innerHTML = "" // Clear the dropdown first
@@ -349,90 +344,91 @@ populateCategories()
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 //Section for Search All Prompts feature
-
-// When the search prompts button is clicked...
 searchPromptsBtn.addEventListener("click", async (event) => {
   event.preventDefault()
 
   // Fetch prompts of the selected category.
   const categoryId = searchCategorySelect.value
-  const response = await fetch(
-    `http://localhost:3001/api/prompts/category/${categoryId}`
-  )
-  const prompts = await response.json()
-  // const categoryData = await response.json()
+  try {
+    const response = await axios.get(
+      `http://localhost:3001/api/prompts/category/${categoryId}`
+    )
+    const prompts = response.data
 
-  // Clear the prompts list.
-  promptsList.innerHTML = ""
+    // Clear the prompts list.
+    promptsList.innerHTML = ""
 
-  // Display prompts in a list.
-  prompts.forEach((prompt) => {
-    const li = document.createElement("li")
-    li.textContent = prompt.description
+    // Display prompts in a list.
+    prompts.forEach((prompt) => {
+      const li = document.createElement("li")
+      li.textContent = prompt.description
 
-    // When a prompt is clicked, copy its description to the clipboard.
-    li.addEventListener("click", () => {
-      navigator.clipboard
-        .writeText(prompt.description)
-        .then(() => alert("Prompt copied to clipboard!"))
-        .catch((error) => console.error("Error:", error))
+      // When a prompt is clicked, copy its description to the clipboard.
+      li.addEventListener("click", () => {
+        navigator.clipboard
+          .writeText(prompt.description)
+          .then(() => alert("Prompt copied to clipboard!"))
+          .catch((error) => console.error("Error:", error))
+      })
+
+      promptsList.append(li)
     })
-
-    promptsList.append(li)
-  })
+  } catch (error) {
+    console.error("Error:", error)
+  }
 })
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 //Section for Delete a Prompt feature
-
-// When the search delete prompts button is clicked...
 searchDeletePromptsBtn.addEventListener("click", async (event) => {
   event.preventDefault()
 
   // Fetch prompts of the selected category.
   const categoryId = deleteCategorySelect.value
-  const response = await fetch(
-    `http://localhost:3001/api/prompts/category/${categoryId}`
-  )
-  const prompts = await response.json()
+  try {
+    const response = await axios.get(
+      `http://localhost:3001/api/prompts/category/${categoryId}`
+    )
+    const prompts = response.data
 
-  // Clear the delete prompts list.
-  deletePromptsList.innerHTML = ""
+    // Clear the prompts list.
+    deletePromptsList.innerHTML = ""
 
-  // Display prompts in a list.
-  prompts.forEach((prompt) => {
-    const li = document.createElement("li")
-    li.textContent = prompt.description
+    // Display prompts in a list.
+    prompts.forEach((prompt) => {
+      const li = document.createElement("li")
+      li.textContent = prompt.description
 
-    // When a prompt li is clicked, ask for confirmation and delete it if confirmed.
-    li.addEventListener("click", async () => {
-      const confirmDelete = window.confirm(
-        "Are you sure you want to delete this prompt?"
-      )
-      if (confirmDelete) {
-        try {
-          const response = await fetch(
-            `http://localhost:3001/api/prompts/${prompt._id}`,
-            { method: "DELETE" }
-          )
-          if (!response.ok)
-            throw new Error(`HTTP error! status: ${response.status}`)
-          li.remove()
-        } catch (error) {
-          console.error("Error:", error)
+      // When a prompt is clicked, delete the prompt.
+      li.addEventListener("click", async () => {
+        if (confirm(`Are you sure you want to delete this prompt?`)) {
+          try {
+            const response = await axios.delete(
+              `http://localhost:3001/api/prompts/${prompt._id}`
+            )
+            console.log("Prompt deleted:", response)
+            li.remove() // Remove the prompt from the list.
+            alert("Prompt deleted!")
+          } catch (error) {
+            console.error("Failed to delete prompt:", error)
+          }
         }
-      }
-    })
+      })
 
-    deletePromptsList.append(li)
-  })
+      deletePromptsList.append(li)
+    })
+  } catch (error) {
+    console.error("Error:", error)
+  }
 })
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 // Section for Create New Prompt feature
 
 //When Create Prompt is clicked...
+
 createPromptBtn.addEventListener("click", async (event) => {
   event.preventDefault()
 
@@ -450,19 +446,13 @@ createPromptBtn.addEventListener("click", async (event) => {
   // If the new category option is checked and newCategory is not empty, create a new category
   if (document.querySelector("#newCategoryOption").checked && newCategory) {
     try {
-      const response = await fetch(
+      const response = await axios.post(
         "http://localhost:3001/api/promptCategories",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ name: newCategory }),
-        }
+        { name: newCategory }
       )
 
       // Set promptCategory to the id of the new category
-      const data = await response.json()
+      const data = response.data
       promptCategory = data._id
 
       // Repopulate categories dropdowns after a new category is created
@@ -476,21 +466,26 @@ createPromptBtn.addEventListener("click", async (event) => {
 
   // Actually Create the new prompt
   try {
-    const response = await fetch("http://localhost:3001/api/prompts", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title: promptTitle,
-        description: promptDescription,
-        category: promptCategory,
-        user: userID,
-      }),
+    const response = await axios.post("http://localhost:3001/api/prompts", {
+      title: promptTitle,
+      description: promptDescription,
+      category: promptCategory,
+      user: userID,
     })
 
-    const data = await response.json()
+    const data = response.data
     console.log("Prompt created:", data)
+
+    // Reset the input fields
+    titleInput.value = ""
+    descriptionInput.value = ""
+    newCategoryInput.value = ""
+    if (document.querySelector("#newCategoryOption").checked) {
+      categorySelect.value = "" // Reset the category selection if new category was created
+    }
+
+    // Notify the user that prompt creation was successful
+    alert("Prompt successfully created!")
 
     // Repopulate user prompts dropdown after a new prompt is created
     populateUserPrompts()
@@ -506,8 +501,8 @@ createPromptBtn.addEventListener("click", async (event) => {
 // Fetch all categories to populate dropdown list
 
 async function fetchCategories() {
-  const response = await fetch("http://localhost:3001/api/promptCategories")
-  const categories = await response.json()
+  const response = await axios.get("http://localhost:3001/api/promptCategories")
+  const categories = response.data
 
   const deleteCategoryDropdown = document.getElementById(
     "delete-category-dropdown"
@@ -550,14 +545,11 @@ document
 
     if (confirmDelete) {
       try {
-        const response = await fetch(
-          `http://localhost:3001/api/promptCategories/${selectedCategoryId}`,
-          {
-            method: "DELETE",
-          }
+        const response = await axios.delete(
+          `http://localhost:3001/api/promptCategories/${selectedCategoryId}`
         )
 
-        if (!response.ok) {
+        if (response.status !== 200) {
           // Handle non-ok response status
           console.error(
             `Failed to delete category. HTTP status: ${response.status}`
@@ -583,6 +575,7 @@ document
       console.error("Error:", error)
     }
   })
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 // Get elements
@@ -621,77 +614,75 @@ cancelChangesBtn.onclick = function () {
 ///////////////////////////////////////////
 
 // Function to populate categories in update modal
-function populateModalCategories() {
-  fetch("http://localhost:3001/api/promptCategories")
-    .then((response) => response.json())
-    .then((categories) => {
-      updateCategorySelect.innerHTML = "" // Clear the dropdown first
-      categories.forEach((category) => {
-        const option = document.createElement("option")
-        option.value = category._id
-        option.text = category.name
-        updateCategorySelect.add(option)
-      })
+async function populateModalCategories() {
+  try {
+    const response = await axios.get(
+      "http://localhost:3001/api/promptCategories"
+    )
+    const categories = response.data
+    updateCategorySelect.innerHTML = "" // Clear the dropdown first
+    categories.forEach((category) => {
+      const option = document.createElement("option")
+      option.value = category._id
+      option.text = category.name
+      updateCategorySelect.add(option)
     })
-    .catch((error) => console.error("Error:", error))
+  } catch (error) {
+    console.error("Error:", error)
+  }
 }
 
 // Fetch prompts based on selected category
-updateCategorySelect.onchange = function () {
-  fetch(
-    `http://localhost:3001/api/prompts/category/${updateCategorySelect.value}`
-  )
-    .then((response) => response.json())
-    .then((prompts) => {
-      // Clear the prompts list first
-      updatePromptsList.innerHTML = ""
+updateCategorySelect.onchange = async function () {
+  try {
+    const response = await axios.get(
+      `http://localhost:3001/api/prompts/category/${updateCategorySelect.value}`
+    )
+    const prompts = response.data
+    // Clear the prompts list first
+    updatePromptsList.innerHTML = ""
 
-      prompts.forEach((prompt) => {
-        const li = document.createElement("li")
-        li.textContent = prompt.description
+    prompts.forEach((prompt) => {
+      const li = document.createElement("li")
+      li.textContent = prompt.description
 
-        li.addEventListener("click", () => {
-          // Populate the inputs with the prompt's current values
-          newTitleInput.value = prompt.title
-          newDescriptionInput.value = prompt.description
+      li.addEventListener("click", () => {
+        // Populate the inputs with the prompt's current values
+        newTitleInput.value = prompt.title
+        newDescriptionInput.value = prompt.description
 
-          // Store the prompt's id in the form so we can use it when we make the PUT request
-          editPromptForm.dataset.promptId = prompt._id
-        })
-
-        updatePromptsList.append(li)
+        // Store the prompt's id in the form so we can use it when we make the PUT request
+        editPromptForm.dataset.promptId = prompt._id
       })
+
+      updatePromptsList.append(li)
     })
-    .catch((error) => console.error("Error:", error))
+  } catch (error) {
+    console.error("Error:", error)
+  }
 }
 
 ///////////////////////////////////////////
 
 // Actually Update prompt
-editPromptForm.onsubmit = function (event) {
+editPromptForm.onsubmit = async function (event) {
   event.preventDefault()
 
-  fetch(
-    `http://localhost:3001/api/prompts/${editPromptForm.dataset.promptId}`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+  try {
+    const response = await axios.put(
+      `http://localhost:3001/api/prompts/${editPromptForm.dataset.promptId}`,
+      {
         title: newTitleInput.value,
         description: newDescriptionInput.value,
         category: updateCategorySelect.value,
-      }),
-    }
-  )
-    .then((response) => response.json())
-    .then(() => {
-      alert("Changes saved successfully.")
-      // Close the modal after changes saved
-      editPromptModal.style.display = "none"
-    })
-    .catch((error) => console.error("Error:", error))
+      }
+    )
+    alert("Changes saved successfully.")
+    // Close the modal after changes saved
+    editPromptModal.style.display = "none"
+  } catch (error) {
+    console.error("Error:", error)
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
