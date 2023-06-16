@@ -22,8 +22,6 @@ AmAai 2.0 introduces new features that enhance the user experience. Users can ca
 
 ## Developer Stories
 
-## Developer Stories
-
 1. **Set Up Controllers**: As a developer, I want to create controllers to manage routing logic, ensuring efficient handling of user requests. These controllers are responsible for handling interactions between the user and the database, defining what happens when certain API endpoints are accessed.
 
 2. **Set Up DB**: As a developer, I want to establish a mongoDB database to store and manage application data, providing a robust and scalable infrastructure. The database is used to store prompts, categories, and user information, and is accessed using the Mongoose library for MongoDB.
@@ -37,7 +35,6 @@ AmAai 2.0 introduces new features that enhance the user experience. Users can ca
 6. **Configure Server.js File**: As a developer, I want to set up the server.js file to manage the server, forming the backbone of the application's operation. This file initializes and configures the Express.js server, sets up middleware, and connects to the MongoDB database.
 
 7. **Write JS to Populate DOM**: As a developer, I want to use JavaScript to dynamically populate the DOM with data received from the backend, creating an interactive and responsive user interface. The JavaScript code in the application is responsible for creating dynamic content on the webpage, such as listing prompts or categories, handling form submissions, and managing modals.
-
 
 ## Technologies Used
 
